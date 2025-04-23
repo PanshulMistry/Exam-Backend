@@ -62,6 +62,13 @@ public class TestController {
         return ResponseEntity.ok(user);
     }
 	
+	@GetMapping("/getUsers")
+	public ResponseEntity<List<AdminUserProxy>> getUsers() {
+	    List<AdminUserProxy> users = testService.getUsers();
+	    return new ResponseEntity<>(users, HttpStatus.OK);
+	}
+
+	
 	@PostMapping("/update-user")
 	public ResponseEntity<String> updateUserDetails(
 	        @RequestPart("adminUserProxy") AdminUserProxy adminUserProxy,
@@ -81,9 +88,6 @@ public class TestController {
 	    Pageable pageable = PageRequest.of(page, size, sort);
 	    return testService.getAllUsers(pageable);
 	}
-
-	
-
 
 	@PostMapping("/updateUser")
 	public ResponseEntity<String> updateUser(@RequestParam("profilePhoto") MultipartFile file,

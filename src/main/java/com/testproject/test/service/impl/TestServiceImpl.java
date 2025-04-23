@@ -8,12 +8,14 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
+import org.apache.catalina.mapper.Mapper;
 import org.hibernate.query.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
@@ -119,12 +121,42 @@ public class TestServiceImpl implements TestService {
 	@Override
 	public org.springframework.data.domain.Page<AdminUserProxy> getAllUsers(org.springframework.data.domain.Pageable pageable) {
 	    org.springframework.data.domain.Page<AdminUser> entities = testRepo.findByAccessRole(Role.USER, pageable);
-	    
-	    return entities.map(entity -> {
-	        AdminUserProxy proxy = MapperUtils.convertValue(entity, AdminUserProxy.class);
 
-	        // Set profileImage to null to avoid byte[] issue
-	        proxy.setProfileImage(null);
+	    return entities.map(entity -> {
+	        // Create proxy manually without using the mapper
+	        AdminUserProxy proxy = new AdminUserProxy();
+
+	        // Set all fields manually except profileImage
+	        proxy.setId(entity.getId());
+	        proxy.setName(entity.getName());
+	        proxy.setDob(entity.getDob());
+	        proxy.setUsername(entity.getUsername());
+	        proxy.setPassword(entity.getPassword());
+	        proxy.setGender(entity.getGender());
+	        proxy.setAddress(entity.getAddress());
+	        proxy.setEmail(entity.getEmail());
+	        proxy.setContactNumber(entity.getContactNumber());
+	        proxy.setPinCode(entity.getPinCode());
+	        proxy.setAccessRole(entity.getAccessRole());
+
+	        // Handle profile image separately
+	        if (entity.getProfileImage() != null && !entity.getProfileImage().isEmpty()) {
+	            try {
+	                String fileName = entity.getProfileImage();
+	                String originalClassPath = new ClassPathResource("").getFile().getAbsolutePath();
+	                String urlPath = originalClassPath + File.separator + "static" + File.separator + "document";
+	                String absolutePath = urlPath + File.separator + fileName;
+
+	                // Read image as byte array
+	                byte[] imageBytes = Files.readAllBytes(new File(absolutePath).toPath());
+	                proxy.setProfileImage(imageBytes);
+
+	            } catch (IOException e) {
+	                // Log error and continue without setting image
+	                System.err.println("Failed to load image: " + entity.getProfileImage());
+	                e.printStackTrace();
+	            }
+	        }
 
 	        return proxy;
 	    });
@@ -133,34 +165,47 @@ public class TestServiceImpl implements TestService {
 
 	@Override
 	public AdminUserProxy getUserDetails(String email) {
-		// TODO Auto-generated method stub
-		Optional<AdminUser> op = testRepo.findByEmail(email);
-		if (op.isPresent()) {
-//			AdminUser adminUser = op.get();
-//			String fileName = adminUser.getProfileImage();
-//			AdminUserProxy adminUserProxy = MapperUtils.convertValue(op.get(), AdminUserProxy.class);
-//			try {
-//				String originalClassPath = new ClassPathResource("").getFile().getAbsolutePath();
-//				String urlPath = originalClassPath + "\\static\\document";
-//				String absolutePath = urlPath + File.separator + fileName;
-//				System.out.println("ABSPATH:" + absolutePath);
-//				byte[] allBytes = Files.readAllBytes(new File(absolutePath).toPath());
-//				adminUserProxy.setProfileImage(allBytes);
-//			} catch (IOException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
-			 AdminUser adminUser = op.get();
-
-		        // Convert entity to proxy
-		        AdminUserProxy adminUserProxy = MapperUtils.convertValue(adminUser, AdminUserProxy.class);
-
-		        // Always set profile image byte array to null
-		        adminUserProxy.setProfileImage(null);
-
-		        return adminUserProxy;
-		}
-		throw new UserObjNotFoundException();
+	    Optional<AdminUser> op = testRepo.findByEmail(email);
+	    if (op.isPresent()) {
+	        AdminUser adminUser = op.get();
+	        
+	        // Create proxy manually to avoid conversion issues
+	        AdminUserProxy adminUserProxy = new AdminUserProxy();
+	        
+	        // Set all fields manually except profileImage
+	        adminUserProxy.setId(adminUser.getId());
+	        adminUserProxy.setName(adminUser.getName());
+	        adminUserProxy.setDob(adminUser.getDob());
+	        adminUserProxy.setUsername(adminUser.getUsername());
+	        adminUserProxy.setPassword(adminUser.getPassword());
+	        adminUserProxy.setGender(adminUser.getGender());
+	        adminUserProxy.setAddress(adminUser.getAddress());
+	        adminUserProxy.setEmail(adminUser.getEmail());
+	        adminUserProxy.setContactNumber(adminUser.getContactNumber());
+	        adminUserProxy.setPinCode(adminUser.getPinCode());
+	        adminUserProxy.setAccessRole(adminUser.getAccessRole());
+	        
+	        // Handle profile image separately
+	        if (adminUser.getProfileImage() != null && !adminUser.getProfileImage().isEmpty()) {
+	            try {
+	                String fileName = adminUser.getProfileImage();
+	                String originalClassPath = new ClassPathResource("").getFile().getAbsolutePath();
+	                String urlPath = originalClassPath + File.separator + "static" + File.separator + "document";
+	                String absolutePath = urlPath + File.separator + fileName;
+	                
+	                byte[] imageBytes = Files.readAllBytes(new File(absolutePath).toPath());
+	                adminUserProxy.setProfileImage(imageBytes);
+	                
+	            } catch (IOException e) {
+	                // Log error but continue without setting image
+	                System.err.println("Failed to load image: " + adminUser.getProfileImage());
+	                e.printStackTrace();
+	            }
+	        }
+	        
+	        return adminUserProxy;
+	    }
+	    throw new UserObjNotFoundException();
 	}
 
 	@Override
@@ -232,25 +277,68 @@ public class TestServiceImpl implements TestService {
 	    Authentication verfAuth = authManager.authenticate(auth);
 
 	    if (verfAuth.isAuthenticated()) {
+	    
 	        // Extract single role from authorities without adding "ROLE_" prefix
 	        String role = verfAuth.getAuthorities()
 	                              .stream()
 	                              .findFirst()
 	                              .map(grantedAuthority -> grantedAuthority.getAuthority())  // Use the role directly (no prefix)
 	                              .orElse("USER");  // Default to "USER" if no role found
-
+	        Optional<AdminUser> userOptional = testRepo.findByUsername(logReq.getUsername());
+	        String email = userOptional.get().getEmail();
 	        return new LoginResponse(
 	        	role,
-	            jwtUtils.generateToken(logReq.getUsername())
-	              // Include the extracted role
-	        );
+	            jwtUtils.generateToken(logReq.getUsername()),
+	            		email);
 	    }
 
-	    return new LoginResponse("NO ROLE","Request Failed");
+	    return new LoginResponse("NO ROLE","Request Failed","No Email");
 	}
-
-
 	
+	public List<AdminUserProxy> getUsers() {
+	    // Fetch users with USER role
+	    List<AdminUser> entities = testRepo.findByAccessRole(Role.USER);
+	    List<AdminUserProxy> proxies = new ArrayList<>();
 
-
+	    for (AdminUser entity : entities) {
+	        // Create proxy manually without using the mapper
+	        AdminUserProxy proxy = new AdminUserProxy();
+	        
+	        // Set all fields manually except profileImage
+	        proxy.setId(entity.getId());
+	        proxy.setName(entity.getName());
+	        proxy.setDob(entity.getDob());
+	        proxy.setUsername(entity.getUsername());
+	        proxy.setPassword(entity.getPassword());
+	        proxy.setGender(entity.getGender());
+	        proxy.setAddress(entity.getAddress());
+	        proxy.setEmail(entity.getEmail());
+	        proxy.setContactNumber(entity.getContactNumber());
+	        proxy.setPinCode(entity.getPinCode());
+	        proxy.setAccessRole(entity.getAccessRole());
+	        
+	        // Handle profile image separately
+	        if (entity.getProfileImage() != null && !entity.getProfileImage().isEmpty()) {
+	            try {
+	                String fileName = entity.getProfileImage();
+	                String originalClassPath = new ClassPathResource("").getFile().getAbsolutePath();
+	                String urlPath = originalClassPath + File.separator + "static" + File.separator + "document";
+	                String absolutePath = urlPath + File.separator + fileName;
+	                
+	                // Read image as byte array
+	                byte[] imageBytes = Files.readAllBytes(new File(absolutePath).toPath());
+	                proxy.setProfileImage(imageBytes);
+	                
+	            } catch (IOException e) {
+	                // Log error and continue without setting image
+	                System.err.println("Failed to load image: " + entity.getProfileImage());
+	                e.printStackTrace();
+	            }
+	        }
+	        
+	        proxies.add(proxy);
+	    }
+	    
+	    return proxies;
+	}
 }

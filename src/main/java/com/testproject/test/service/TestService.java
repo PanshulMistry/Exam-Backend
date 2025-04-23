@@ -1,5 +1,7 @@
 package com.testproject.test.service;
 
+import java.util.List;
+
 import org.springframework.web.multipart.MultipartFile;
 
 import com.testproject.test.domain.AdminUser;
@@ -10,6 +12,7 @@ import com.testproject.test.proxy.LoginResponse;
 public interface TestService {
 	public String saveUser(AdminUser adminUser);
 	public String saveBulkUsers(Integer size);
+	public List<AdminUserProxy> getUsers();
 	public AdminUserProxy getUserDetails(String email);
 	public String updateUserDetails(AdminUserProxy adminUserProxy,MultipartFile file);
 	public String deleteUserByEmail(String email);
