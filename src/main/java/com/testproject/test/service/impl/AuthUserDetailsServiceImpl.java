@@ -1,6 +1,5 @@
 package com.testproject.test.service.impl;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -14,7 +13,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import com.testproject.test.domain.AdminUser;
-import com.testproject.test.enums.Role;
 import com.testproject.test.exception.UserObjNotFoundException;
 import com.testproject.test.repository.TestRepo;
 

@@ -32,7 +32,7 @@ public class TestSecurityConfiguration {
 		System.err.println("SECURITY FILTER CHAIN");
 		http.csrf(c -> c.disable());
 		http.authorizeHttpRequests(
-				auth -> auth.requestMatchers("/test/getUsers","/test/getUserDetails/**","/test/update-user","/test/deleteUser","/test/getAllUsers","/test/resetPasswordMail/**","/test/reset-password","/test/login","/test/saveUser", "/test/save-bulk-users/**")
+				auth -> auth.requestMatchers("/test/search","/test/getUsers","/test/getUserDetails/**","/test/update-user","/test/deleteUser","/test/getAllUsers","/test/resetPasswordMail/**","/test/reset-password","/test/login","/test/saveUser", "/test/save-bulk-users/**")
 						.permitAll().anyRequest().authenticated());
 //				.requestMatchers("/security/getAllStudents").hasAnyAuthority("ADMIN").anyRequest().authenticated());
 //		http.formLogin(Customizer.withDefaults());

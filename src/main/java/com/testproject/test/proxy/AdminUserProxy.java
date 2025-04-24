@@ -3,6 +3,7 @@ package com.testproject.test.proxy;
 
 import java.sql.Date;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.testproject.test.enums.Gender;
 import com.testproject.test.enums.Role;
 
@@ -21,6 +22,7 @@ public class AdminUserProxy {
 	private String name;
 	
 	@NotNull(message = "Please Enter Date of Birth")
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
 	private Date dob;
 	
 	@NotBlank(message = "Please enter username")

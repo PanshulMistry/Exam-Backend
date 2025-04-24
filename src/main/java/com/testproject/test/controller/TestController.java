@@ -88,6 +88,15 @@ public class TestController {
 	    Pageable pageable = PageRequest.of(page, size, sort);
 	    return testService.getAllUsers(pageable);
 	}
+	
+	@GetMapping("/search")
+	public Page<AdminUserProxy> searchUsers(@RequestParam String keyword,
+	                                        @RequestParam int page,
+	                                        @RequestParam int size) {
+	    Pageable pageable = PageRequest.of(page, size);
+	    return testService.searchUsers(keyword, pageable);
+	}
+
 
 	@PostMapping("/updateUser")
 	public ResponseEntity<String> updateUser(@RequestParam("profilePhoto") MultipartFile file,

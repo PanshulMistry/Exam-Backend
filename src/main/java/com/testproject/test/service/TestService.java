@@ -2,6 +2,7 @@ package com.testproject.test.service;
 
 import java.util.List;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.testproject.test.domain.AdminUser;
@@ -18,4 +19,5 @@ public interface TestService {
 	public String deleteUserByEmail(String email);
 	public LoginResponse login(LoginRequest logReq);
 	public org.springframework.data.domain.Page<AdminUserProxy> getAllUsers(org.springframework.data.domain.Pageable pageable);
+	public org.springframework.data.domain.Page<AdminUserProxy> searchUsers(String keyword, Pageable pageable);
 }
