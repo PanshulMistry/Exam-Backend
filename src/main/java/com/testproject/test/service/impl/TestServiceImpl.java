@@ -383,4 +383,11 @@ public class TestServiceImpl implements TestService {
 	    
 	    return proxies;
 	}
+
+	@Override
+	public List<AdminUser> getAllUserList() {
+		// TODO Auto-generated method stub
+		
+		return testRepo.findByAccessRole(Role.USER);
+	}
 }

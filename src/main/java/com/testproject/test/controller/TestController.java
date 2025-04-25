@@ -5,6 +5,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -36,7 +39,9 @@ import com.testproject.test.proxy.ResetPasswordRequest;
 import com.testproject.test.service.ResetPasswordService;
 import com.testproject.test.service.TestService;
 import com.testproject.test.utils.MapperUtils;
+import com.testproject.test.utils.UserExcelExporter;
 
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 
@@ -96,6 +101,23 @@ public class TestController {
 	    Pageable pageable = PageRequest.of(page, size);
 	    return testService.searchUsers(keyword, pageable);
 	}
+	
+	 @GetMapping("/users/export/excel")
+	    public void exportToExcel(HttpServletResponse response) throws IOException {
+	        response.setContentType("application/octet-stream");
+	        DateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss");
+	        String currentDateTime = dateFormatter.format(new Date());
+	         
+	        String headerKey = "Content-Disposition";
+	        String headerValue = "attachment; filename=users_" + currentDateTime + ".xlsx";
+	        response.setHeader(headerKey, headerValue);
+	         
+	        List<AdminUser> listUsers = testService.getAllUserList();
+	         
+	        UserExcelExporter excelExporter = new UserExcelExporter(listUsers);
+	         
+	        excelExporter.export(response);    
+	    }  
 
 
 	@PostMapping("/updateUser")
