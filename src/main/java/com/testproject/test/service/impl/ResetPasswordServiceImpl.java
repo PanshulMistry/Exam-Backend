@@ -29,7 +29,9 @@ public class ResetPasswordServiceImpl implements ResetPasswordService{
 	
 	@Override
 	public String getToken(String email) {
-		if(repo.findByEmail(email).isEmpty()) throw new UserObjNotFoundException();
+		if(repo.findByEmail(email).isEmpty()) {
+			throw new UserObjNotFoundException();
+		}
 		
 		ResetPasswordToken newToken = new ResetPasswordToken();
 		newToken.setEmail(email);
